@@ -117,3 +117,18 @@ echo "Hello World" > ~/encryption/encryption.txt
 ```
 ~/gnupg-1.4.13/g10/gpg -d ~/encryption/encryption.txt
 ```
+Code in FR:
+
+```
+#define SAMPLES 100000
+#define SLOT	2000
+#define THRESHOLD 100
+
+char *monitor[] = {
+  "mpih-mul.c:85",
+  "mpih-mul.c:271",
+  "mpih-div.c:356"
+};
+```
+
+Problem found: My Linux distribution didn't have these C files, because it is a Windows Sub Linux with in AMD chips.
