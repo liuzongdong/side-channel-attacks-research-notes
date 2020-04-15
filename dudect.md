@@ -11,7 +11,7 @@
     - Cropping: Exclude extreme values due to OS or other unrelated factors
     - Higher-order preprocessing: Adjust the system based on different statistical tests
     - Statistical Test
-      - Welch's T-test: I need to do further study on this
+      - Welch's T-test: It is a T-test method to 
       - Non-parametric test: I need to do further study on this too
 
 ``` C
