@@ -2,13 +2,13 @@
 
 ## Environment
 
-- OS: WSL (Windows Sub Linux) in Kali Linux
+- OS: WSL (Windows Sub Linux) in Ubuntu 18.04
 - Kernel: 4.4.0-18362-Microsoft
 
 ## Install Dependencies
 
 ```
-sudo apt install gcc-multilib
+sudo apt install gcc-multilib build-essential libdwarf-dev binutils-dev libelf-dev
 ```
 
 ## Compile the GnuPG 1.4.13
@@ -117,7 +117,9 @@ echo "Hello World" > ~/encryption/encryption.txt
 ```
 ~/gnupg-1.4.13/g10/gpg -d ~/encryption/encryption.txt
 ```
-Code in FR:
+If you get your encrypted message, everything works fine
+
+Code in the FR:
 
 ```
 #define SAMPLES 100000
@@ -130,5 +132,3 @@ char *monitor[] = {
   "mpih-div.c:356"
 };
 ```
-
-Problem found: My Linux distribution didn't have these C files, because it is a Windows Sub Linux with in AMD chips.
