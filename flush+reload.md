@@ -1,59 +1,74 @@
-# Reproducing GnuPG 1.4.13 (FLUSH+RELOAD)
+# Flush + Reload Notes
 
 ## Environment
 
-- OS: WSL (Windows Sub Linux) in Ubuntu 18.04
-- Kernel: 4.4.0-18362-Microsoft
+- Computer: Macbook Pro 2015 13"
+- OS: Ubuntu 18.04.4 LTS
+- Kernel: 5.3.0-46-generic
+- CPU: Intel i5-5287U @ 2.90GHZ x 4
+- OS Type: 64-bit
+- Memory: 7.7 GiB
+
+For more information, please check the file `environment.md`
 
 ## Install Dependencies
 
+Build tools:
+
+``` bash
+sudo apt install curl gcc-multilib build-essential 
 ```
-sudo apt install gcc-multilib build-essential libdwarf-dev binutils-dev libelf-dev
+
+Flush + Reload dependencies
+
+``` bash
+sudo apt install libdwarf-dev binutils-dev libelf-dev
 ```
 
 ## Compile the GnuPG 1.4.13
 
-- Download and extract the source code
+Download and extract the source code
 
-```
+``` bash
 cd ~
 curl -O https://gnupg.org/ftp/gcrypt/gnupg/gnupg-1.4.13.tar.gz
 tar -zxvf gnupg-1.4.13.tar.gz
 ```
-- Compile the GnuPG through make
-```
+
+Compile the GnuPG through make
+
+``` bash
 ./configure
 make
 ```
+
 - The compiled file will locate at `~/gnupg-1.4.13/g10/gpg`
 
-## Create the Scenario
+## Generate the default key
 
-- Generate a public key
-
-```
+``` bash
 cd ~
 mkdir gnupg_home
 chmod 777 ./gnupg_home
 export GNUPGHOME="~/gnupg_home"
 ~/gnupg-1.4.13/g10/gpg --gen-key
 ```
-- Select the following:
-```
-    - RSA and RSA
-    - 2048
-    - Never expires
-```
 
-- Input information (username, comment, email)
+Select the following
 
-```
+- RSA and RSA
+- 2048
+- Never Expires
+
+Input information (username, comment, email)
+
+``` null
 Test Key
 test
 test@test.com
 ```
 
-- A example of console output:
+An example of console output:
 
 ```
 gpg (GnuPG) 1.4.13; Copyright (C) 2012 Free Software Foundation, Inc.
@@ -103,27 +118,29 @@ pub   2048R/2B2A6F1D 2020-04-02
 uid                  Test Key (test) <test@test.com>
 sub   2048R/B68B58D6 2020-04-02
 ```
-- Encrypt a test messagge
 
-```
+Encrypt a test message
+
+``` bash
 cd ~
 mkdir encryption
 echo "Hello World" > ~/encryption/encryption.txt
 ~/gnupg-1.4.13/g10/gpg -r "Test Key" -e ~/encryption/encryption.txt
 ```
 
-- To decrypt the messages, this step requires the  
+To decrypt the messages, this step requires the  
 
-```
+``` bash
 ~/gnupg-1.4.13/g10/gpg -d ~/encryption/encryption.txt
 ```
+
 If you get your encrypted message, everything works fine
 
 Code in the FR:
 
-```
+``` C
 #define SAMPLES 100000
-#define SLOT	2000
+#define SLOT    2000
 #define THRESHOLD 100
 
 char *monitor[] = {
