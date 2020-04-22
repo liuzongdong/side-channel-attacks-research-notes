@@ -1,6 +1,32 @@
-# Flush + Reload Notes
+# Flush + Reload
 
-## Environment
+## Background
+
+### Microarchitecture
+
+Microarchitecture:
+
+![Microarchitecture](img/fr_fig1.png "Microarchitecture")
+
+### Cache
+
+Cache, is used to solve the problem that the memory is slower than the processors, it is an expensive technology and much closer to the CPU so it is faster than memory access.
+
+The CPUs use the cache to store the recent lines of memory they read. If a CPU has multiple cores, the cores can use one of the cached content by others to save time.
+
+### Memory
+
+The processes execute themselves in the virtual address space. Normally, the virtual address space is a fake address. Then, these fake addresses were mapped into the physical memory addresses. In this way, the processes will not fight each other in memory.
+
+Sharing of the cache is used to save the physical memory. A example here: shared libraries, If two programs use the same shared library, we can map this shared library to the same location. The operating system can be more agressive and do page deduplication: it detects duplicated memory patterns and de-duplicate them, removing one of them, then mapping the two program to the same region in memory. If one of the processes then wants to modify some of that shared memory, the system will copy it somewhere else so that he can do that. It was very popular with hypervisors back then but since cache attacks are a thing we don't do that anymore.
+
+### Flush + Reload Basis
+
+Inconsistency between memory and cache happens. Sometimes developers want to flush the data in the cache to make sure that the next load is served directly from the memory. Sometimes, we need to "totally" refresh a webpage in Chrome to make the CSS and JS are reloaded instead of the contents in the cache, To be more specific, using `Ctrl + Shift + R` instead of `Ctrl + R` in Chrome. And that is the basis of the `Flush + Reload` Attack.
+
+## Reproducing
+
+Environment
 
 - Computer: Macbook Pro 2015 13"
 - OS: Ubuntu 18.04.4 LTS
@@ -16,7 +42,7 @@ For more information, please check the file `environment.md`
 Build tools:
 
 ``` bash
-sudo apt install curl gcc-multilib build-essential 
+sudo apt install curl gcc-multilib build-essential
 ```
 
 Flush + Reload dependencies
@@ -42,7 +68,7 @@ Compile the GnuPG through make
 make
 ```
 
-- The compiled file will locate at `~/gnupg-1.4.13/g10/gpg`
+The compiled file will locate at `~/gnupg-1.4.13/g10/gpg`
 
 ## Generate the default key
 
@@ -54,23 +80,15 @@ export GNUPGHOME="~/gnupg_home"
 ~/gnupg-1.4.13/g10/gpg --gen-key
 ```
 
-Select the following
+Select the following and input your information (username, comment, email)
 
 - RSA and RSA
 - 2048
 - Never Expires
 
-Input information (username, comment, email)
-
-``` null
-Test Key
-test
-test@test.com
-```
-
 An example of console output:
 
-```
+``` null
 gpg (GnuPG) 1.4.13; Copyright (C) 2012 Free Software Foundation, Inc.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
@@ -93,30 +111,6 @@ Please specify how long the key should be valid.
 Key is valid for? (0)
 Key does not expire at all
 Is this correct? (y/N) y
-
-We need to generate a lot of random bytes. It is a good idea to perform
-some other action (type on the keyboard, move the mouse, utilize the
-disks) during the prime generation; this gives the random number
-generator a better chance to gain enough entropy.
-..+++++
-...............+++++
-We need to generate a lot of random bytes. It is a good idea to perform
-some other action (type on the keyboard, move the mouse, utilize the
-disks) during the prime generation; this gives the random number
-generator a better chance to gain enough entropy.
-+++++
-...+++++
-gpg: /home/liuzongdong/testconf_gpg/trustdb.gpg: trustdb created
-gpg: key 2B2A6F1D marked as ultimately trusted
-public and secret key created and signed.
-
-gpg: checking the trustdb
-gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
-gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
-pub   2048R/2B2A6F1D 2020-04-02
-      Key fingerprint = 6D27 E8BA A905 6BE2 EDC5  12EF EDD5 6D68 2B2A 6F1D
-uid                  Test Key (test) <test@test.com>
-sub   2048R/B68B58D6 2020-04-02
 ```
 
 Encrypt a test message
