@@ -1,30 +1,61 @@
 # Flush + Reload
 
+A note contains my understanding and trace of the attacks reproducing
+
 ## Background
 
 ### Microarchitecture
-
-Microarchitecture:
 
 ![Microarchitecture](img/fr_fig1.png "Microarchitecture")
 
 ### Cache
 
-Cache, is used to solve the problem that the memory is slower than the processors, it is an expensive technology and much closer to the CPU so it is faster than memory access.
+The cache is used to solve the problem that the memory is slower than the processors. It is an expensive technology and much closer to the CPU, so it is faster than memory access.
 
 The CPUs use the cache to store the recent lines of memory they read. If a CPU has multiple cores, the cores can use one of the cached content by others to save time.
 
 ### Memory
 
-The processes execute themselves in the virtual address space. Normally, the virtual address space is a fake address. Then, these fake addresses were mapped into the physical memory addresses. In this way, the processes will not fight each other in memory.
+The processes execute themselves in the virtual address space. Typically, the virtual address space is a fake address. Then, these fake addresses were mapped into the physical memory addresses. In this way, the processes will not fight each other in memory.
 
-Sharing of the cache is used to save the physical memory. A example here: shared libraries, If two programs use the same shared library, we can map this shared library to the same location. The operating system can be more agressive and do page deduplication: it detects duplicated memory patterns and de-duplicate them, removing one of them, then mapping the two program to the same region in memory. If one of the processes then wants to modify some of that shared memory, the system will copy it somewhere else so that he can do that. It was very popular with hypervisors back then but since cache attacks are a thing we don't do that anymore.
+Sharing of the cache is used to save the physical memory. An example here: shared libraries. If two programs use the same shared library, we can map this shared library to the same location. The operating system can be more aggressive and do page deduplication. In essence, it detects duplicated memory patterns and de-duplicate them, removing one of them, then mapping the two programs to the same region in memory. If one of the processes then wants to modify some of that shared memory, the system will copy it somewhere else so that he can do that. It was very popular with hypervisors back then, but since cache attacks are a thing, we don't do that anymore.
 
 ### Flush + Reload Basis
 
-Inconsistency between memory and cache happens. Sometimes developers want to flush the data in the cache to make sure that the next load is served directly from the memory. Sometimes, we need to "totally" refresh a webpage in Chrome to make the CSS and JS are reloaded instead of the contents in the cache, To be more specific, using `Ctrl + Shift + R` instead of `Ctrl + R` in Chrome. And that is the basis of the `Flush + Reload` Attack.
+Inconsistency between memory and cache happens. Sometimes developers want to flush the data in the cache to make sure that the next load is served directly from memory. Occasionally, we need to "totally" refresh a webpage in Chrome to make the CSS and JS are reloaded instead of the contents in the cache, To be more specific, using `Ctrl + Shift + R` instead of `Ctrl + R` in Chrome. And that is the basis of the `Flush + Reload` Attack.
+
+The process of Flush + Reload is quite straightforward: Read form memory and then flush that cache position repeatedly. If the read takes a `long` time means it is normal. If it takes `short` time means someone else accessed it in memory and it was cached.
+
+the definition of `long` and `short` will be explained in the detail in the following section.
+
+### Flush + Reload Core
+
+Let's look at the assemble code
+
+``` assemble
+mfence
+lfence
+rdtsc
+lfence
+movl %%eax, %%esi
+movl (%1), %%eax
+lfence
+rdtsc
+subl %%esi %%eax
+clflush 0(%1)
+```
+
+`clfush`: It is the instrction to flush the cache
+
+`rdtsc`: Read the time stamp counter
+
+`lfence`: This instruction provides a performance-efficient way of ensuring load ordering between routines that produce weakly-ordered results and routines that consume that data
+
+Hence, we can get the delta of two `rdtsc` instructions to measure the runtime of the `mov` operation in between
 
 ## Reproducing
+
+> Important! AMD, X86-32bit, and ARM chips were not supported!!
 
 Environment
 
@@ -130,6 +161,96 @@ To decrypt the messages, this step requires the
 
 If you get your encrypted message, everything works fine
 
+## Compile the Mastik
+
+``` bash
+cd ~
+curl -O https://cs.adelaide.edu.au/~yval/Mastik/releases/Mastik-0.02-AyeAyeCapn.tgz
+tar -zxvf Mastik-0.02-AyeAyeCapn.tgz
+cd Mastik-0.02-AyeAyeCapn
+./configure
+make
+```
+
+Copy the gpg binary file into the demo folder
+
+## File access
+
+The program is pretty short and concise, it monitored a file continuously via reading and flushing
+
+Open a terminal and run the following
+
+``` bash
+./FR-1-file-access
+```
+
+Open another terminal, use `cat` or `vim` to open the `FR-1-file-access.c`
+
+``` bash
+vim FR-1-file-access.c
+```
+
+You will see the output from the first terminal
+
+``` bash
+FR-1-file-access.c   accessed
+```
+
+In this code, Yuval sets 100 as a threshold for long and short
+
+## Threshold
+
+This program is used to find the threshold for `long` and `short`
+
+``` bash
+./FR-threshold
+```
+
+In my case, the output is
+
+``` bash
+               :  Mem   Cache
+Minimum        :  172   63
+Bottom decile  :  194   66
+Median         :  211   83
+Top decile     :  217   86
+Maximum        :  36882 6154
+```
+
+However, I also tried the same thing in the AMD chips, and the output is following:
+
+``` bash
+               :   Mem   Cache
+Minimum        :   259   259
+Bottom decile  :   296   296
+Median         :   296   296
+Top decile     :   333   333
+Maximum        :   13579 6327
+```
+
+A possible explanation for this behaviour is that the AMD caches are non-inclusive, i.e. data in L1 does not need to also be in L2 or L3
+
+## Modular exponentiation
+
+``` c
+x ⟵ 1
+for i ⟵ |e|-1 downto 0 do
+    x ⟵ x2 mod n
+    if (ei = 1) then
+        x = xb mod n
+    endif
+done
+return x
+```
+
+According to the code, the modular exponentiation used the following operations:
+
+- Square
+- Reduce
+- Multiply
+
+The secret exponent is encoded in the sequence of operations
+
 Code in the FR:
 
 ``` C
@@ -143,3 +264,5 @@ char *monitor[] = {
   "mpih-div.c:356"
 };
 ```
+
+Therefore, we will monitor this three functions
