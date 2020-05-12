@@ -59,12 +59,12 @@ Hence, we can get the delta of two `rdtsc` instructions to measure the runtime o
 
 Environment
 
-- Computer: Macbook Pro 2015 13"
+- Computer: MacBook Pro 2015 13"
 - OS: Ubuntu 18.04.4 LTS
 - Kernel: 5.3.0-46-generic
 - CPU: Intel i5-5287U @ 2.90GHZ x 4
 - OS Type: 64-bit
-- Memory: 7.7 GiB
+- Memory: 7.7 GB
 
 For more information, please check the file `environment.md`
 
@@ -228,7 +228,7 @@ Top decile     :   333   333
 Maximum        :   13579 6327
 ```
 
-A possible explanation for this behaviour is that the AMD caches are non-inclusive, i.e. data in L1 does not need to also be in L2 or L3
+A possible explanation for this behavior is that the AMD caches are non-inclusive, i.e. data in L1 does not need to also be in L2 or L3
 
 ## Modular exponentiation
 
