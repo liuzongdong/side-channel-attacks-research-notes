@@ -251,7 +251,7 @@ According to the code, the modular exponentiation used the following operations:
 
 The secret exponent is encoded in the sequence of operations
 
-Code in the FR:
+Code in the Flush and Reload:
 
 ``` C
 #define SAMPLES 100000
@@ -265,4 +265,41 @@ char *monitor[] = {
 };
 ```
 
-Therefore, we will monitor this three functions
+Therefore, we will monitor these three functions based on the idea of Flush and Reload. After running the spy program and the GnuPG.
+
+Please check the following outputs.
+
+``` na
+4398: 208 211 63
+4399: 208 83 83
+4400: 191 163 83
+4401: 208 188 66
+4402: 399 191 83
+4403: 83 86 83
+4404: 83 217 315
+4405: 280 461 83
+4406: 208 188 66
+4407: 309 83 66
+4408: 208 208 208
+4409: 191 208 83
+4410: 357 208 66
+4411: 208 83 83
+4412: 191 208 205
+4413: 539 208 83
+4414: 191 211 83
+4415: 149 69 66
+4416: 83 211 146
+4417: 66 208 80
+4418: 191 205 80
+4419: 256 140 83
+4420: 208 208 208
+4421: 503 211 80
+4422: 191 191 83
+4423: 146 83 83
+```
+
+Before the colon, the number indicates the `Time Slot Number` The first column of the number: `Probe Time (cycles)`, means the execution time of the Square function. The second column of the number indicates the execution time of the Reduce function, and the last one involves the Multiply.
+
+Based on the sequence of each operation, if the counter is less than 120, we infer that it comes from the cache. Check the image below for the Time Measurements of Probes.
+
+![time_measurements_of_probes](img/time_measurements_of_probes.png "time_measurements_of_probes")
